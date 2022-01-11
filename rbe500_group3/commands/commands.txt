@@ -1,0 +1,14 @@
+rosservice call /inverse_kine "pose:
+  position:
+    x: 1.56780
+    y: 0.51960
+    z: -0.1179
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 0.0" 
+    
+rosrun group1 inverse_server.py
+
+rosrun group1 inverse_client.py 1.56780 0.51960 -0.1179 0 0 0 0

@@ -1,0 +1,62 @@
+<launch>
+
+  <arg name="model" default="$(find rbe500_group)/urdf/robot.urdf.xacro"/>
+  <arg name="gui" default="true" />
+  <arg name="x" default="0.0" />
+  <arg name="y" default="0.0" />
+  <arg name="z" default="0.0" />
+  <arg name="rvizconfig" default="$(find rbe500_group)/rviz/rviz.rviz" />
+
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+
+  <!-- <node name="my_robot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"  -->
+  <!-- args = "-urdf -param robot_description -model pinak_robot -x $(arg x) -y $(arg y) -z $(arg z)"/> -->
+  <!-- <node if="$(arg gui)" name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" /> -->
+  <!-- <node unless="$(arg gui)" name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
+  <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+    <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <!-- <arg name="gui" default="true"/> -->
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <!-- <arg name="model" default="$(find urdf_tutorial)/urdf/08-macroed.urdf.xacro"/> -->
+  <rosparam file="$(find rbe500_group)/config/config.yaml" command="load"/>
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+
+  <!-- <param name="robot_description" command="$(find xacro)/xacro $(arg model)" /> -->
+
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args="-x 0 -y 0 -z 0 -R 0 -P 0 -Y 0 -unpause -urdf -model robot -param robot_description 
+      -J joint0 0
+      -J joint2 1.5
+      -J joint3 0.3
+      -unpause" respawn="false" output="screen" />
+
+    <!-- load & start the position controllers -->
+   <node name="controller_spawner_stopped" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/robot" args=
+      "--stopped joint0_position_controller
+      		 joint2_position_controller
+           joint3_position_controller"/>
+
+    <!-- load & start the velocity controllers -->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/robot" args=
+      "joint_state_controller
+       joint0_velocity_controller
+       joint2_velocity_controller
+       joint3_velocity_controller"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_st_pub" respawn="false" output="screen">
+        <remap from="/joint_states" to="/robot/joint_states" />
+  </node> 
+
+
+</launch>
